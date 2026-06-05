@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 4: Network Heist</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--surface:#111118;--surface2:#16161f;--border:#1e1e2e;
+--accent:#ff2d55;--accent2:#30d158;--accent3:#ffd60a;--text:#e2e8f0;--muted:#64748b;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--text);
+display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:1.5rem 1rem 4rem;}
+.topbar{width:100%;max-width:960px;display:flex;align-items:center;justify-content:space-between;
+margin-bottom:1.2rem;padding-bottom:1rem;border-bottom:1px solid var(--border);}
+.brand{font-family:'Poppins',sans-serif;font-size:.75rem;color:var(--accent);letter-spacing:.2em;font-weight:700;}
+.brand small{display:block;color:var(--muted);font-size:.65rem;margin-top:.3rem;letter-spacing:.05em;font-weight:400;}
+.scoreboard{display:flex;gap:1rem;font-family:'Courier New',monospace;}
+.scorepill{border:1px solid var(--border);padding:.45rem .8rem;font-size:.7rem;letter-spacing:.05em;}
+.scorepill .lbl{color:var(--muted);font-size:.55rem;display:block;margin-bottom:.2rem;letter-spacing:.1em;}
+.scorepill .val{color:var(--accent);font-size:1.1rem;font-weight:700;}
+.scorepill.flags .val{color:var(--accent2);}
+.stage{width:100%;max-width:960px;}
+.slide{display:none;background:var(--surface);border:1px solid var(--border);
+min-height:500px;padding:2.8rem 3.2rem;flex-direction:column;justify-content:center;
+position:relative;overflow:hidden;animation:sIn .3s ease forwards;}
+.slide.active{display:flex;}
+@keyframes sIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}
+.slide::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;
+background:linear-gradient(180deg,var(--accent),transparent 80%);}
+.slide::after{content:'';position:absolute;inset:0;
+background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 4px);
+pointer-events:none;}
+.stag{font-family:'Inter',sans-serif;font-size:.65rem;color:var(--accent);
+letter-spacing:.2em;text-transform:uppercase;margin-bottom:.9rem;}
+.sh1{font-size:2.8rem;font-weight:800;line-height:1.05;color:#fff;margin-bottom:.9rem;font-family:'Poppins',sans-serif;}
+.sh1 .hl{color:var(--accent);}
+.sh2{font-size:1.85rem;font-weight:800;color:#fff;margin-bottom:1.2rem;font-family:'Poppins',sans-serif;}
+.sub{font-size:.95rem;color:var(--muted);line-height:1.7;max-width:540px;}
+.blist{list-style:none;display:flex;flex-direction:column;gap:.6rem;}
+.blist li{display:flex;gap:.8rem;font-size:.9rem;line-height:1.5;color:#cbd5e1;align-items:flex-start;}
+.blist li::before{content:'>';color:var(--accent);font-family:'Courier New',monospace;font-size:.8rem;margin-top:.1rem;flex-shrink:0;}
+.cmd-box{background:#000;border:1px solid var(--border);border-left:3px solid var(--accent);
+padding:.8rem 1.1rem;font-family:'Courier New',monospace;font-size:.74rem;
+color:#5eead4;line-height:1.7;overflow-x:auto;white-space:pre;margin:.5rem 0;}
+.infobox{background:rgba(255,45,85,.05);border:1px solid rgba(255,45,85,.15);padding:1rem 1.2rem;}
+.infobox .ilabel{font-family:'Inter',sans-serif;font-size:.62rem;color:var(--accent);letter-spacing:.1em;margin-bottom:.4rem;}
+.infobox p{font-size:.85rem;color:#cbd5e1;line-height:1.6;}
+.warnbox{background:rgba(255,214,10,.06);border:1px solid rgba(255,214,10,.25);border-left:3px solid var(--accent3);padding:1rem 1.2rem;}
+.warnbox .wlabel{font-family:'Inter',sans-serif;font-size:.62rem;color:var(--accent3);letter-spacing:.1em;margin-bottom:.4rem;}
+.warnbox p{font-size:.85rem;color:#e2e8f0;line-height:1.6;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;}
+.card{background:var(--surface2);border:1px solid var(--border);padding:1rem 1.2rem;}
+.ctag{font-family:'Courier New',monospace;font-size:.62rem;color:var(--accent);letter-spacing:.1em;margin-bottom:.4rem;}
+.card p{font-size:.82rem;color:#94a3b8;line-height:1.5;}
+.mission{background:rgba(255,45,85,.07);border:1px solid rgba(255,45,85,.25);border-left:3px solid var(--accent);padding:1.1rem 1.3rem;margin-bottom:1rem;}
+.mission .mlabel{font-family:'Courier New',monospace;font-size:.62rem;color:var(--accent);letter-spacing:.12em;margin-bottom:.4rem;}
+.mission p{font-size:.92rem;color:#fff;line-height:1.55;}
+.flag-meta{display:flex;gap:.8rem;margin-bottom:.8rem;flex-wrap:wrap;}
+.chip{font-family:'Courier New',monospace;font-size:.6rem;border:1px solid var(--border);padding:.3rem .6rem;color:var(--muted);letter-spacing:.05em;}
+.chip.skill{color:var(--accent2);border-color:rgba(48,209,88,.3);}
+.btn-row{display:flex;gap:.7rem;margin-top:.5rem;flex-wrap:wrap;}
+.hint-btn{background:none;border:1px solid var(--accent3);color:var(--accent3);
+font-family:'Courier New',monospace;font-size:.64rem;padding:.45rem .9rem;cursor:pointer;letter-spacing:.05em;transition:all .2s;}
+.hint-btn:hover:not(:disabled){background:rgba(255,214,10,.1);}
+.hint-btn:disabled{opacity:.4;cursor:not-allowed;}
+.reveal{display:none;margin-top:.7rem;background:rgba(255,214,10,.05);border:1px solid rgba(255,214,10,.2);border-left:3px solid var(--accent3);padding:.7rem 1rem;}
+.reveal .rlabel{font-family:'Courier New',monospace;font-size:.58rem;letter-spacing:.1em;color:var(--accent3);margin-bottom:.35rem;}
+.reveal p{font-size:.82rem;color:#cbd5e1;line-height:1.55;}
+.submit-row{display:flex;gap:.6rem;margin-top:.9rem;flex-wrap:wrap;}
+.flag-input{flex:1;min-width:240px;background:#000;border:1px solid var(--border);
+color:#5eead4;font-family:'Courier New',monospace;font-size:.74rem;padding:.5rem .8rem;letter-spacing:.03em;}
+.flag-input:focus{outline:none;border-color:var(--accent);}
+.flag-input:disabled{opacity:.6;}
+.submit-btn{background:var(--accent);border:1px solid var(--accent);color:#fff;
+font-family:'Courier New',monospace;font-size:.66rem;font-weight:700;padding:.5rem 1.1rem;cursor:pointer;letter-spacing:.06em;transition:all .2s;}
+.submit-btn:hover{background:#e02348;}
+.submit-msg{margin-top:.55rem;font-family:'Courier New',monospace;font-size:.72rem;min-height:1rem;line-height:1.4;}
+.submit-msg.ok{color:var(--accent2);}
+.submit-msg.bad{color:var(--accent3);}
+.nav{width:100%;max-width:960px;display:flex;align-items:center;justify-content:space-between;margin-top:1.5rem;gap:1rem;}
+.nbtn{background:none;border:1px solid var(--border);color:var(--text);font-family:'Inter',sans-serif;font-size:.72rem;padding:.55rem 1.2rem;cursor:pointer;letter-spacing:.08em;transition:all .2s;}
+.nbtn:hover{border-color:var(--accent);color:var(--accent);}
+.nbtn:disabled{opacity:.2;cursor:not-allowed;}
+.pbar{flex:1;height:2px;background:var(--border);}
+.pfill{height:100%;background:var(--accent);transition:width .3s;}
+.scnt{font-family:'Courier New',monospace;font-size:.62rem;color:var(--muted);min-width:55px;text-align:right;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">DAY 4<small>Network Heist: Capture All Five Flags</small></div>
+  <div class="scoreboard">
+    <div class="scorepill"><span class="lbl">SCORE</span><span class="val" id="score">100</span></div>
+    <div class="scorepill flags"><span class="lbl">FLAGS</span><span class="val" id="flagcount">0/5</span></div>
+  </div>
+</div>
+
+<div class="stage">
+
+<div class="slide active" id="s1">
+  <div class="stag">Final Mission</div>
+  <h1 class="sh1">The <span class="hl">Network</span><br>Heist</h1>
+  <p class="sub">Five flags are hidden on a live network share. Your job is to break in and capture all five using nothing but the Command Prompt. Find a flag, paste it in to lock it in. Every hint costs points. Keep your score high and prove you can think like a real penetration tester.</p>
+</div>
+
+<div class="slide" id="s2">
+  <div class="stag">Where We Are</div>
+  <h2 class="sh2">From Puzzles to a Live Target</h2>
+  <p style="font-size:0.9rem;color:#cbd5e1;line-height:1.7;margin-bottom:1rem;">Day 3 you solved sandboxed puzzles on CyLab Security Academy. Today is different. You connect to a real network and hunt for files on a real shared drive that your instructor is hosting right now.</p>
+  <div class="infobox">
+    <div class="ilabel">THIS IS THE REAL WORKFLOW</div>
+    <p>Connect to a target, map its shared drive, search systematically, sift real data from decoys, and extract the prize. This is what penetration testers actually do.</p>
+  </div>
+</div>
+
+<div class="slide" id="s3">
+  <div class="stag">The Rules</div>
+  <h2 class="sh2">How Scoring Works</h2>
+  <ul class="blist">
+    <li>You start with 100 points</li>
+    <li>Each flag has two hints. Revealing a hint costs 2 points</li>
+    <li>When you find a flag, paste it into that flag's submit box</li>
+    <li>Your first wrong guess on a flag costs 5 points</li>
+    <li>After that first miss, submit as many times as you want, no extra penalty</li>
+    <li>A correct flag turns green and ticks your FLAGS counter</li>
+    <li>Highest score with all five flags wins</li>
+  </ul>
+  <div class="warnbox" style="margin-top:1rem;">
+    <div class="wlabel">DO NOT REFRESH</div>
+    <p>Your score and captured flags live in this page. Refreshing resets everything to 100 and 0 flags. Keep this tab open the whole time.</p>
+  </div>
+</div>
+
+<div class="slide" id="s4">
+  <div class="stag">Bridge</div>
+  <h2 class="sh2">Linux to Windows: Same Ideas</h2>
+  <p style="font-size:0.9rem;color:#cbd5e1;line-height:1.6;margin-bottom:1rem;">Day 3 used Linux commands. Today is Windows Command Prompt. The thinking is identical, only the words change.</p>
+  <div class="two-col">
+    <div class="card"><div class="ctag">LINUX (DAY 3)</div><p>ls = list files<br>cat = read a file<br>grep = search inside files<br>find = locate files</p></div>
+    <div class="card"><div class="ctag">WINDOWS (TODAY)</div><p>dir = list files<br>type = read a file<br>findstr = search inside files<br>dir /s = locate files</p></div>
+  </div>
+</div>
+
+<div class="slide" id="s5">
+  <div class="stag">Concept</div>
+  <h2 class="sh2">What Is a Network Share?</h2>
+  <p style="font-size:0.9rem;color:#cbd5e1;line-height:1.7;margin-bottom:1rem;">A network share is a folder one computer makes available to other computers on the same network. Your instructor's laptop is sharing a folder right now, and you're about to browse it from your own machine.</p>
+  <div class="infobox">
+    <div class="ilabel">THE KEY IDEA</div>
+    <p>Once you connect, that remote folder acts almost like a folder on your own computer. Everything inside it is reachable. That convenience is also a security risk, which is the whole point of today.</p>
+  </div>
+</div>
+
+<div class="slide" id="s6">
+  <div class="stag">Concept</div>
+  <h2 class="sh2">Hidden Does Not Mean Safe</h2>
+  <p style="font-size:0.9rem;color:#cbd5e1;line-height:1.7;margin-bottom:1rem;">Some flags today are marked hidden. A hidden file just doesn't show up in normal browsing. But one command flag reveals every hidden file instantly.</p>
+  <div class="warnbox">
+    <div class="wlabel">REMEMBER THIS FOR THE DEBRIEF</div>
+    <p>Hiding a file is like putting a "do not look" sticker on a box. It stops a casual glance. It stops nobody who is actually looking. Keep that in mind as you hunt.</p>
+  </div>
+</div>
+
+<div class="slide" id="s7">
+  <div class="stag">Setup</div>
+  <h2 class="sh2">Step 1: Connect and Fill This In</h2>
+  <p style="font-size:0.88rem;color:var(--muted);margin-bottom:0.8rem;">Connect to the instructor's WiFi hotspot, then note the details:</p>
+  <ul class="blist">
+    <li>WiFi network name: written on the board</li>
+    <li>WiFi password: written on the board</li>
+    <li>Instructor IP address: written on the board (looks like 192.168.137.1)</li>
+    <li>Share path: two backslashes, the IP, then backslash challenge</li>
+  </ul>
+  <div class="infobox" style="margin-top:1rem;">
+    <div class="ilabel">YOUR CHEAT SHEET</div>
+    <p>Use the paper cheat sheet for the full command reference. These slides drive the mission and hold the hints. The cheat sheet holds the command tables.</p>
+  </div>
+</div>
+
+<div class="slide" id="s8">
+  <div class="stag">Setup</div>
+  <h2 class="sh2">Step 2: Open CMD and Map the Drive</h2>
+  <p style="font-size:0.88rem;color:var(--muted);margin-bottom:0.6rem;">Press Win+R, type cmd, press Enter. Then connect to the share:</p>
+  <div class="cmd-box">ping 192.168.137.1
+net use Z: \\192.168.137.1\challenge
+Z:</div>
+  <div class="infobox">
+    <div class="ilabel">WHAT THIS DOES</div>
+    <p>ping tests that you can reach the instructor's laptop. net use maps their shared folder as your Z drive. Typing Z: then Enter moves you onto that drive. Now you can hunt. Replace the IP with the real one from the board.</p>
+  </div>
+</div>
+
+<div class="slide" id="s9">
+  <div class="stag">Toolkit</div>
+  <h2 class="sh2">Your Four Key Commands</h2>
+  <div class="cmd-box">dir /s /a        list every file, including hidden, in all folders
+type filename    read what is inside a file
+findstr /s /i "FLAG" *.*    search inside all files for a word
+attrib filename  show if a file is Hidden (H)</div>
+  <div class="infobox" style="margin-top:0.6rem;">
+    <div class="ilabel">THE BIG TWO</div>
+    <p>dir /s /a is your map: it reveals everything, even hidden files. findstr is your metal detector: it digs inside files for the word FLAG. Master these two and the flags fall.</p>
+  </div>
+</div>
+
+<div class="slide" id="s10">
+  <div class="stag">Flag 1 of 5</div>
+  <h2 class="sh2">Warmup: The Welcome Mat</h2>
+  <div class="flag-meta"><span class="chip">DIFFICULTY: EASY</span><span class="chip skill">SKILL: dir /s + type</span></div>
+  <div class="mission"><div class="mlabel">MISSION</div><p>Somewhere on the share is a plain welcome file holding your first flag. Nothing is hidden. Just list the files across all folders and read the obvious one.</p></div>
+  <div class="btn-row">
+    <button class="hint-btn" onclick="spend(2,'f1h1',this)">HINT 1 (-2)</button>
+    <button class="hint-btn" onclick="spend(2,'f1h2',this)">HINT 2 (-2)</button>
+  </div>
+  <div class="reveal" id="f1h1"><div class="rlabel">HINT 1</div><p>Use dir with the /s flag to list files in every subfolder at once.</p></div>
+  <div class="reveal" id="f1h2"><div class="rlabel">HINT 2</div><p>Look for a file named like a greeting in a public folder, then read it with type.</p></div>
+  <div class="submit-row">
+    <input class="flag-input" id="f1inp" type="text" placeholder="Paste the flag you captured, ex: FLAG{...}">
+    <button class="submit-btn" onclick="submitFlag(1,'1033913053555936',this)">SUBMIT FLAG</button>
+  </div>
+  <div class="submit-msg" id="f1msg"></div>
+</div>
+
+<div class="slide" id="s11">
+  <div class="stag">Flag 2 of 5</div>
+  <h2 class="sh2">The Invisible File</h2>
+  <div class="flag-meta"><span class="chip">DIFFICULTY: EASY</span><span class="chip skill">SKILL: the /a flag</span></div>
+  <div class="mission"><div class="mlabel">MISSION</div><p>This flag sits in a file that does NOT appear in a normal dir. It is hidden. You'll need to tell dir to show hidden files too.</p></div>
+  <div class="btn-row">
+    <button class="hint-btn" onclick="spend(2,'f2h1',this)">HINT 1 (-2)</button>
+    <button class="hint-btn" onclick="spend(2,'f2h2',this)">HINT 2 (-2)</button>
+  </div>
+  <div class="reveal" id="f2h1"><div class="rlabel">HINT 1</div><p>A normal dir hides it. Add the /a flag to show ALL files including hidden ones.</p></div>
+  <div class="reveal" id="f2h2"><div class="rlabel">HINT 2</div><p>Check folders named like documents and old. The hidden file lives deep in a user folder. Then type it.</p></div>
+  <div class="submit-row">
+    <input class="flag-input" id="f2inp" type="text" placeholder="Paste the flag you captured, ex: FLAG{...}">
+    <button class="submit-btn" onclick="submitFlag(2,'7316686147503191',this)">SUBMIT FLAG</button>
+  </div>
+  <div class="submit-msg" id="f2msg"></div>
+</div>
+
+<div class="slide" id="s12">
+  <div class="stag">Flag 3 of 5</div>
+  <h2 class="sh2">Wolf in Sheep's Clothing</h2>
+  <div class="flag-meta"><span class="chip">DIFFICULTY: MEDIUM</span><span class="chip skill">SKILL: filter by extension</span></div>
+  <div class="mission"><div class="mlabel">MISSION</div><p>This flag is in a file disguised to look boring and harmless, with an extension like .tmp, as if it were a leftover system file. It is also hidden. Sniff out the imposter.</p></div>
+  <div class="btn-row">
+    <button class="hint-btn" onclick="spend(2,'f3h1',this)">HINT 1 (-2)</button>
+    <button class="hint-btn" onclick="spend(2,'f3h2',this)">HINT 2 (-2)</button>
+  </div>
+  <div class="reveal" id="f3h1"><div class="rlabel">HINT 1</div><p>List everything in bare format with dir /s /a /b, then scan for an odd .tmp file.</p></div>
+  <div class="reveal" id="f3h2"><div class="rlabel">HINT 2</div><p>Pipe the list into findstr to filter: dir Z:\ /s /a /b then add a pipe to findstr .tmp, then type that file.</p></div>
+  <div class="submit-row">
+    <input class="flag-input" id="f3inp" type="text" placeholder="Paste the flag you captured, ex: FLAG{...}">
+    <button class="submit-btn" onclick="submitFlag(3,'4039318454107107',this)">SUBMIT FLAG</button>
+  </div>
+  <div class="submit-msg" id="f3msg"></div>
+</div>
+
+<div class="slide" id="s13">
+  <div class="stag">Flag 4 of 5</div>
+  <h2 class="sh2">Needle in the Haystack</h2>
+  <div class="flag-meta"><span class="chip">DIFFICULTY: MEDIUM</span><span class="chip skill">SKILL: findstr content search</span></div>
+  <div class="mission"><div class="mlabel">MISSION</div><p>This flag is buried inside a file stuffed with junk text. Reading the file by hand is painful. Instead, search INSIDE the files for the word FLAG.</p></div>
+  <div class="btn-row">
+    <button class="hint-btn" onclick="spend(2,'f4h1',this)">HINT 1 (-2)</button>
+    <button class="hint-btn" onclick="spend(2,'f4h2',this)">HINT 2 (-2)</button>
+  </div>
+  <div class="reveal" id="f4h1"><div class="rlabel">HINT 1</div><p>findstr searches inside files, like grep did in Linux. You want it to look in every file.</p></div>
+  <div class="reveal" id="f4h2"><div class="rlabel">HINT 2</div><p>Use /s to search subfolders and /i to ignore capitalization: findstr /s /i "FLAG" Z:\*.*</p></div>
+  <div class="submit-row">
+    <input class="flag-input" id="f4inp" type="text" placeholder="Paste the flag you captured, ex: FLAG{...}">
+    <button class="submit-btn" onclick="submitFlag(4,'3773430387122573',this)">SUBMIT FLAG</button>
+  </div>
+  <div class="submit-msg" id="f4msg"></div>
+</div>
+
+<div class="slide" id="s14">
+  <div class="stag">Flag 5 of 5</div>
+  <h2 class="sh2">Boss Level: The Vault</h2>
+  <div class="flag-meta"><span class="chip">DIFFICULTY: HARD</span><span class="chip skill">SKILL: combine everything</span></div>
+  <div class="mission"><div class="mlabel">MISSION</div><p>The final flag is hidden, renamed to look like a boring backup file, and buried several folders deep. No single trick finds it. You must combine your tools: reveal hidden files, enumerate everything, and spot the one file that does not belong.</p></div>
+  <div class="btn-row">
+    <button class="hint-btn" onclick="spend(2,'f5h1',this)">HINT 1 (-2)</button>
+    <button class="hint-btn" onclick="spend(2,'f5h2',this)">HINT 2 (-2)</button>
+  </div>
+  <div class="reveal" id="f5h1"><div class="rlabel">HINT 1</div><p>Start with dir Z:\ /s /a /b to dump every file path including hidden ones. Read the list carefully.</p></div>
+  <div class="reveal" id="f5h2"><div class="rlabel">HINT 2</div><p>Look in the deepest nested folders for a file with a boring name like .bak or config. Then type it, or run findstr /s /i "FLAG" Z:\*.* to confirm.</p></div>
+  <div class="submit-row">
+    <input class="flag-input" id="f5inp" type="text" placeholder="Paste the flag you captured, ex: FLAG{...}">
+    <button class="submit-btn" onclick="submitFlag(5,'5962254531122051',this)">SUBMIT FLAG</button>
+  </div>
+  <div class="submit-msg" id="f5msg"></div>
+</div>
+
+<div class="slide" id="s15">
+  <div class="stag">Watch Out</div>
+  <h2 class="sh2">Beware the Decoys</h2>
+  <p style="font-size:0.9rem;color:#cbd5e1;line-height:1.7;margin-bottom:1rem;">The share is salted with fake files designed to waste your time. Real pen testers face this constantly: not every interesting-looking file is the prize.</p>
+  <ul class="blist">
+    <li>A readme file with fake login credentials</li>
+    <li>A notes file containing FAKE_FLAG, not a real flag</li>
+    <li>A system log that looks important but holds nothing</li>
+  </ul>
+  <div class="warnbox" style="margin-top:1rem;">
+    <div class="wlabel">THE TELL</div>
+    <p>Real flags follow the exact format FLAG and curly braces. Anything saying FAKE_FLAG or tryharder is bait. If the submit box rejects it, you may have grabbed a decoy.</p>
+  </div>
+</div>
+
+<div class="slide" id="s16">
+  <div class="stag">Checkpoint</div>
+  <h2 class="sh2">Tally Your Run</h2>
+  <p style="font-size:0.9rem;color:#cbd5e1;line-height:1.7;margin-bottom:1rem;">Check the top of the screen. How many flags did you capture, and how many points did you keep? Compare with the room.</p>
+  <ul class="blist">
+    <li>All 5 flags, 90 or more points: elite operator</li>
+    <li>All 5 flags, any score: mission complete, well done</li>
+    <li>Missing flags: which command would have cracked it?</li>
+  </ul>
+  <div class="infobox" style="margin-top:1rem;">
+    <div class="ilabel">THE REAL SCORE</div>
+    <p>Points are for fun. The real win is understanding HOW you found each flag and why hiding them failed. That understanding is next.</p>
+  </div>
+</div>
+
+<div class="slide" id="s17">
+  <div class="stag">Debrief 1</div>
+  <h2 class="sh2">Hiding Is Not Securing</h2>
+  <p style="font-size:0.9rem;color:#cbd5e1;line-height:1.7;margin-bottom:1rem;">Every flag today was hidden, renamed, or buried. None of that stopped you. A single dir /s /a revealed the hidden ones. findstr dug the rest out of any file.</p>
+  <div class="infobox">
+    <div class="ilabel">THE LESSON</div>
+    <p>Hiding and renaming are obscurity, not security. They slow down a curious person for about ten seconds. Against anyone with basic commands, they fail completely. This is one of the most important ideas in all of security.</p>
+  </div>
+</div>
+
+<div class="slide" id="s18">
+  <div class="stag">Debrief 2</div>
+  <h2 class="sh2">Shares Expose Everything</h2>
+  <p style="font-size:0.9rem;color:#cbd5e1;line-height:1.7;margin-bottom:1rem;">The moment you mapped the Z drive, every file in that folder was within reach. Hidden or not, buried or not, it was all exposed to anyone on the network.</p>
+  <div class="warnbox">
+    <div class="wlabel">REAL WORLD</div>
+    <p>Misconfigured network shares are a top cause of real data breaches. Companies accidentally share folders full of passwords, customer data, and backups. Attackers map the drive, run dir /s, and walk away with everything. Exactly what you just did.</p>
+  </div>
+</div>
+
+<div class="slide" id="s19">
+  <div class="stag">Debrief 3</div>
+  <h2 class="sh2">So What Actually Works?</h2>
+  <p style="font-size:0.9rem;color:#cbd5e1;line-height:1.7;margin-bottom:1rem;">If hiding fails, what protects real data?</p>
+  <ul class="blist">
+    <li>Encryption: scramble the file so even if found, it is unreadable without a key</li>
+    <li>Access controls: only specific accounts can open the folder, not Everyone</li>
+    <li>Authentication: prove who you are before any access is granted</li>
+    <li>Least privilege: share only what is truly needed, nothing more</li>
+  </ul>
+  <div class="infobox" style="margin-top:1rem;">
+    <div class="ilabel">THE QUESTION</div>
+    <p>If you were hiding something important, what would you do differently? That instinct toward encryption is exactly right.</p>
+  </div>
+</div>
+
+<div class="slide" id="s20">
+  <div class="stag">Ethics</div>
+  <h2 class="sh2">Why This Is a Job</h2>
+  <p style="font-size:0.9rem;color:#cbd5e1;line-height:1.7;margin-bottom:1rem;">Everything you did today was on equipment you were given permission to attack. That permission is the entire difference between a penetration tester and a criminal.</p>
+  <div class="warnbox">
+    <div class="wlabel">THE LINE</div>
+    <p>Penetration testers are hired to find these gaps before bad actors do. Same skills, same commands, but authorized and legal. Doing this to any network without explicit written permission is a crime. The skill is neutral. The permission is everything.</p>
+  </div>
+</div>
+
+<div class="slide" id="s21">
+  <div class="stag">The Week</div>
+  <h2 class="sh2">Look How Far You Came</h2>
+  <ul class="blist">
+    <li>Day 1: Social engineering and the human side of hacking</li>
+    <li>Day 2: Command line mastery through OverTheWire Bandit</li>
+    <li>Day 3: Capture the flag across five categories on CyLab</li>
+    <li>Day 4: Breached a live network share and captured five flags</li>
+  </ul>
+  <div class="infobox" style="margin-top:1rem;">
+    <div class="ilabel">YOU NOW KNOW</div>
+    <p>How attackers think, how to navigate systems by command line, how to search and extract hidden data, and why real security relies on encryption and access control, not on hiding. That is a genuine foundation.</p>
+  </div>
+</div>
+
+<div class="slide" id="s22">
+  <div class="stag">Final Words</div>
+  <h2 class="sh2">You Think Like a Hacker Now</h2>
+  <p style="font-size:0.95rem;color:#e2e8f0;margin-bottom:1rem;">A week ago, a shared folder was just a folder. Now you see it the way an attacker does: a map to explore, decoys to ignore, and secrets that hiding cannot protect. That shift in how you see systems is the real prize, bigger than any flag.</p>
+  <div class="mission">
+    <div class="mlabel">CARRY THIS FORWARD</div>
+    <p>Use these powers only with permission. Build things, protect things, and find the gaps before the bad actors do. The world needs more people who think like you now do.</p>
+  </div>
+</div>
+
+</div>
+
+<div class="nav">
+  <button class="nbtn" id="prev-btn" onclick="changeSlide(-1)" disabled>PREV</button>
+  <div class="pbar"><div class="pfill" id="progress"></div></div>
+  <div class="scnt" id="counter">1 / 22</div>
+  <button class="nbtn" id="next-btn" onclick="changeSlide(1)">NEXT</button>
+</div>
+
+<script>
+let currentSlide = 1;
+const totalSlides = 22;
+let score = 100;
+let flags = 0;
+const flagState = {};
+
+function updateScore(){ document.getElementById('score').textContent = score; }
+function updateFlags(){ document.getElementById('flagcount').textContent = flags + '/5'; }
+
+function spend(amount, boxId, btn){
+  if(btn.dataset.used === 'true') return;
+  btn.dataset.used = 'true';
+  score -= amount;
+  if(score < 0) score = 0;
+  updateScore();
+  document.getElementById(boxId).style.display = 'block';
+  btn.disabled = true;
+}
+
+function hashStr(str){
+  let h1=0xdeadbeef, h2=0x41c6ce57;
+  for(let i=0;i<str.length;i++){
+    let ch=str.charCodeAt(i);
+    h1=Math.imul(h1^ch,2654435761);
+    h2=Math.imul(h2^ch,1597334677);
+  }
+  h1=Math.imul(h1^(h1>>>16),2246822507); h1^=Math.imul(h2^(h2>>>13),3266489909);
+  h2=Math.imul(h2^(h2>>>16),2246822507); h2^=Math.imul(h1^(h1>>>13),3266489909);
+  return (4294967296*(2097151&h2)+(h1>>>0)).toString();
+}
+
+function submitFlag(n, expectedHash, btn){
+  if(!flagState[n]) flagState[n] = {penalized:false, solved:false};
+  const s = flagState[n];
+  const inp = document.getElementById('f'+n+'inp');
+  const msg = document.getElementById('f'+n+'msg');
+  if(s.solved){ msg.textContent = 'Already captured. Nice work.'; msg.className='submit-msg ok'; return; }
+  const val = inp.value.trim();
+  if(val === ''){ msg.textContent = 'Paste the flag you found first.'; msg.className='submit-msg bad'; return; }
+  if(hashStr(val.toLowerCase()) === expectedHash){
+    s.solved = true;
+    flags += 1; if(flags > 5) flags = 5; updateFlags();
+    msg.textContent = 'Correct! Flag captured.';
+    msg.className = 'submit-msg ok';
+    inp.disabled = true;
+    btn.disabled = true;
+  } else {
+    if(!s.penalized){
+      s.penalized = true;
+      score -= 5; if(score < 0) score = 0; updateScore();
+      msg.textContent = 'Incorrect. -5 points. Keep trying, no more penalty for this flag.';
+    } else {
+      msg.textContent = 'Still incorrect. No penalty this time. Keep trying.';
+    }
+    msg.className = 'submit-msg bad';
+  }
+}
+
+function changeSlide(dir){
+  const prev = document.getElementById('s' + currentSlide);
+  if(prev) prev.classList.remove('active');
+  currentSlide = Math.min(Math.max(currentSlide + dir, 1), totalSlides);
+  const next = document.getElementById('s' + currentSlide);
+  if(next) next.classList.add('active');
+  document.getElementById('prev-btn').disabled = currentSlide === 1;
+  document.getElementById('next-btn').disabled = currentSlide === totalSlides;
+  document.getElementById('counter').textContent = currentSlide + ' / ' + totalSlides;
+  document.getElementById('progress').style.width = ((currentSlide/totalSlides)*100)+'%';
+  window.scrollTo(0,0);
+}
+document.addEventListener('keydown', e => {
+  if(e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown') changeSlide(1);
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp') changeSlide(-1);
+});
+updateScore(); updateFlags();
+document.getElementById('progress').style.width = ((1/totalSlides)*100)+'%';
+</script>
+</body>
+</html>
